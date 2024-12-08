@@ -8,36 +8,26 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 
-# Initialize Spark session
 spark = SparkSession.builder.master("local[*]").appName("Advanced Similarity Search").getOrCreate()
 
-# Load the dataset (adjust the file path as necessary)
 df = spark.read.csv("amazon.csv", header=True, inferSchema=True)
 
-# Show the first few records to verify the dataset
 df.show(5, truncate=False)
 
-# Text Preprocessing: Tokenization and TF-IDF
 tokenizer = Tokenizer(inputCol="about_product", outputCol="words")
 hashingTF = HashingTF(inputCol="words", outputCol="raw_features", numFeatures=1000)
 idf = IDF(inputCol="raw_features", outputCol="features")
 
-# Build the pipeline
 pipeline = Pipeline(stages=[tokenizer, hashingTF, idf])
 
-# Fit and transform the data
 model = pipeline.fit(df)
 result = model.transform(df)
 
-# Cache the result to speed up further operations
 result.cache()
 
-# Show the result with TF-IDF features
 result.select("product_id", "about_product", "features").show(5, truncate=False)
 
-# Define similarity metrics
 
-# Cosine Similarity
 def cosine_similarity(df):
     similarities = []
     features = df.select("features").rdd.map(lambda row: row[0]).collect()
@@ -50,7 +40,6 @@ def cosine_similarity(df):
     
     return similarities
 
-# Euclidean Distance
 def euclidean_distance(df):
     distances = []
     features = df.select("features").rdd.map(lambda row: row[0]).collect()
@@ -63,7 +52,6 @@ def euclidean_distance(df):
     
     return distances
 
-# Jaccard Similarity
 def jaccard_similarity(df):
     similarities = []
     features = df.select("features").rdd.map(lambda row: row[0]).collect()
@@ -78,7 +66,6 @@ def jaccard_similarity(df):
     
     return similarities
 
-# Manhattan Distance
 def manhattan_distance(df):
     distances = []
     features = df.select("features").rdd.map(lambda row: row[0]).collect()
@@ -91,7 +78,6 @@ def manhattan_distance(df):
     
     return distances
 
-# Hamming Distance (for binary data)
 def hamming_distance(df):
     distances = []
     features = df.select("features").rdd.map(lambda row: row[0]).collect()
@@ -130,7 +116,7 @@ hamming_dist = hamming_distance(result)
 hamming_time = time.time() - start_time
 print("Hamming Distance Time:", hamming_time)
 
-# Plot execution times
+
 metrics = ['Cosine', 'Jaccard', 'Euclidean', 'Manhattan', 'Hamming']
 times = [cosine_time, jaccard_time, euclidean_time, manhattan_time, hamming_time]
 
@@ -139,7 +125,6 @@ plt.ylabel('Execution Time (seconds)')
 plt.title('Execution Time of Similarity Metrics')
 plt.show()
 
-# Saving the results (similarities) to CSV files
 cosine_sim_df = pd.DataFrame(cosine_sim, columns=["Product 1", "Product 2", "Cosine Similarity"])
 cosine_sim_df.to_csv("cosine_similarity_results.csv", index=False)
 
@@ -155,7 +140,6 @@ manhattan_dist_df.to_csv("manhattan_distance_results.csv", index=False)
 hamming_dist_df = pd.DataFrame(hamming_dist, columns=["Product 1", "Product 2", "Hamming Distance"])
 hamming_dist_df.to_csv("hamming_distance_results.csv", index=False)
 
-# Links to download the similarity results
 cosine_sim_link = 'cosine_similarity_results.csv'
 euclidean_dist_link = 'euclidean_distance_results.csv'
 jaccard_sim_link = 'jaccard_similarity_results.csv'
